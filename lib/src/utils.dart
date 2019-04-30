@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:buffer/buffer.dart';
 
 class MerkleTreeUtils {
-
   static bool isHexStr(String v) {
     return RegExp('^(0x)?[0-9A-Fa-f]*\$').hasMatch(v);
   }
@@ -26,11 +25,10 @@ class MerkleTreeUtils {
   }
 
   static int bufferCompare(Uint8List a, Uint8List b) {
-    for (int i = 0;i < a.length && i < b.length;i++) {
+    for (int i = 0; i < a.length && i < b.length; i++) {
       if (a[i] < b[i]) return -1;
       if (a[i] > b[i]) return 1;
     }
     return 0;
   }
 }
-

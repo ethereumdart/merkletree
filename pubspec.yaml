@@ -1,6 +1,6 @@
 name: merkletree
 description: Construct Merkle Trees and verify proofs in Dart.
-version: 1.0.2
+version: 1.0.3
 homepage: https://github.com/ethereumdart/merkletree
 author: Peter Chung <touhonoob@gmail.com>
 

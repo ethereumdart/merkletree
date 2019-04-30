@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import "package:convert/convert.dart";
 import 'package:merkletree/merkletree.dart';
-import 'package:merkletree/utils.dart';
+import 'package:merkletree/src/utils.dart';
 import "package:pointycastle/pointycastle.dart";
 import "package:test/test.dart";
 
@@ -16,27 +16,40 @@ Uint8List sha3(Uint8List data) {
   return sha3.process(data);
 }
 
-
 void main() {
   group("merkeltree", () {
     test("sha256 - sha3 leaves", () {
-      List<Uint8List> leaves = ['a', 'b', 'c'].map((x) => Uint8List.fromList(x.codeUnits)).map((x) => sha3(x)).toList();
+      List<Uint8List> leaves = ['a', 'b', 'c']
+          .map((x) => Uint8List.fromList(x.codeUnits))
+          .map((x) => sha3(x))
+          .toList();
       var tree = MerkleTree(leaves: leaves, hashAlgo: sha256);
-      expect(hex.encode(tree.root), '311d2e46f49b15fff8b746b74ad57f2cc9e0d9939fda94387141a2d3fdf187ae');
+      expect(hex.encode(tree.root),
+          '311d2e46f49b15fff8b746b74ad57f2cc9e0d9939fda94387141a2d3fdf187ae');
     });
 
     test("sha256 - sha256 leaves", () {
-      List<Uint8List> leaves = ['a', 'b', 'c'].map((x) => Uint8List.fromList(x.codeUnits)).map((x) => sha256(x)).toList();
+      List<Uint8List> leaves = ['a', 'b', 'c']
+          .map((x) => Uint8List.fromList(x.codeUnits))
+          .map((x) => sha256(x))
+          .toList();
       var tree = MerkleTree(leaves: leaves, hashAlgo: sha256);
-      expect(hex.encode(tree.root), '7075152d03a5cd92104887b476862778ec0c87be5c2fa1c0a90f87c49fad6eff');
+      expect(hex.encode(tree.root),
+          '7075152d03a5cd92104887b476862778ec0c87be5c2fa1c0a90f87c49fad6eff');
     });
 
     test("solidity sha3 [keccak-256]", () {
-      List<Uint8List> leaves = ['a', 'b', 'c'].map((x) => Uint8List.fromList(x.codeUnits)).map((x) => sha3(x)).toList();
+      List<Uint8List> leaves = ['a', 'b', 'c']
+          .map((x) => Uint8List.fromList(x.codeUnits))
+          .map((x) => sha3(x))
+          .toList();
 
-      var a_hash = '3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb';
-      var b_hash = 'b5553de315e0edf504d9150af82dafa5c4667fa618ed0a6f19c69b41166c5510';
-      var c_hash = '0b42b6393c1f53060fe3ddbfcd7aadcca894465a5a438f69c87d790b2299b9b2';
+      var a_hash =
+          '3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb';
+      var b_hash =
+          'b5553de315e0edf504d9150af82dafa5c4667fa618ed0a6f19c69b41166c5510';
+      var c_hash =
+          '0b42b6393c1f53060fe3ddbfcd7aadcca894465a5a438f69c87d790b2299b9b2';
 
       expect(leaves.map((x) => hex.encode(x)), [a_hash, b_hash, c_hash]);
 
@@ -44,11 +57,13 @@ void main() {
 
       var layers = tree.layers.sublist(1); // no leaves
 
-      var layer_1 = hex.encode(sha3(MerkleTreeUtils.bufferConcat([leaves[0], leaves[1]])));
+      var layer_1 = hex
+          .encode(sha3(MerkleTreeUtils.bufferConcat([leaves[0], leaves[1]])));
       expect(hex.encode(layers[0][0]), layer_1);
       expect(hex.encode(layers[0][1]), c_hash);
 
-      var root = hex.decode('aff1208e69c9e8be9b584b07ebac4e48a1ee9d15ce3afe20b77a4d29e4175aa3');
+      var root = hex.decode(
+          'aff1208e69c9e8be9b584b07ebac4e48a1ee9d15ce3afe20b77a4d29e4175aa3');
       expect(hex.encode(tree.root), hex.encode(root));
 
       var proof_0 = tree.getProof(leaf: leaves[0]);
@@ -58,7 +73,8 @@ void main() {
       expect(proof_0[1].position, MerkleProofPosition.right);
       expect(hex.encode(proof_0[1].data), c_hash);
 
-      expect(tree.verify(proof: proof_0, targetNode: leaves[0], root: root), true);
+      expect(
+          tree.verify(proof: proof_0, targetNode: leaves[0], root: root), true);
 
       var proof_1 = tree.getProof(leaf: leaves[1]);
       expect(proof_1.length, 2);
@@ -66,31 +82,41 @@ void main() {
       expect(hex.encode(proof_1[0].data), a_hash);
       expect(proof_1[1].position, MerkleProofPosition.right);
       expect(hex.encode(proof_1[1].data), c_hash);
-      
-      expect(tree.verify(proof: proof_1, targetNode: leaves[1], root: root), true);
-      
+
+      expect(
+          tree.verify(proof: proof_1, targetNode: leaves[1], root: root), true);
+
       var proof_2 = tree.getProof(leaf: leaves[2]);
       expect(proof_2.length, 1);
       expect(proof_2[0].position, MerkleProofPosition.left);
       expect(hex.encode(proof_2[0].data), layer_1);
-      
-      expect(tree.verify(proof: proof_2, targetNode: leaves[2], root: root), true);
+
+      expect(
+          tree.verify(proof: proof_2, targetNode: leaves[2], root: root), true);
     });
 
     test("solidity sha3 [keccak-256] with duplicate leaves", () {
-      List<Uint8List> leaves = ['a', 'b', 'a'].map((x) => Uint8List.fromList(x.codeUnits)).map((x) => sha3(x)).toList();
+      List<Uint8List> leaves = ['a', 'b', 'a']
+          .map((x) => Uint8List.fromList(x.codeUnits))
+          .map((x) => sha3(x))
+          .toList();
 
-      var a_hash = '3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb';
-      var b_hash = 'b5553de315e0edf504d9150af82dafa5c4667fa618ed0a6f19c69b41166c5510';
+      var a_hash =
+          '3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb';
+      var b_hash =
+          'b5553de315e0edf504d9150af82dafa5c4667fa618ed0a6f19c69b41166c5510';
 
       var tree = new MerkleTree(leaves: leaves, hashAlgo: sha3);
 
-      expect(leaves.map((x) => hex.encode(x)).toList(), [a_hash, b_hash, a_hash]);
+      expect(
+          leaves.map((x) => hex.encode(x)).toList(), [a_hash, b_hash, a_hash]);
 
-      var root = hex.decode('b8912f7269068901f231a965adfefbc10f0eedcfa61852b103efd54dac7db3d7');
+      var root = hex.decode(
+          'b8912f7269068901f231a965adfefbc10f0eedcfa61852b103efd54dac7db3d7');
       expect(hex.encode(tree.root), hex.encode(root));
 
-      var layer_1 = hex.encode(sha3(MerkleTreeUtils.bufferConcat([leaves[0], leaves[1]])));
+      var layer_1 = hex
+          .encode(sha3(MerkleTreeUtils.bufferConcat([leaves[0], leaves[1]])));
 
       var proof_0 = tree.getProof(leaf: leaves[2], index: 2);
       expect(proof_0.length, 1);
@@ -204,22 +230,30 @@ void main() {
         "27a0797cc5b042ba4c11e72a9555d13a67f00161550b32ede0511718b22dbc2c",
       ]);
 
-      var leaves = txHashes.map((x) => Uint8List.fromList(hex.decode(x))).toList();
+      var leaves =
+          txHashes.map((x) => Uint8List.fromList(hex.decode(x))).toList();
 
-      var tree = MerkleTree(leaves: leaves, hashAlgo: sha256, isBitcoinTree: true);
+      var tree =
+          MerkleTree(leaves: leaves, hashAlgo: sha256, isBitcoinTree: true);
 
-      var root = hex.decode('871714dcbae6c8193a2bb9b2a69fe1c0440399f38d94b3a0f1b447275a29978a');
+      var root = hex.decode(
+          '871714dcbae6c8193a2bb9b2a69fe1c0440399f38d94b3a0f1b447275a29978a');
       expect(hex.encode(tree.root), hex.encode(root));
 
       var proof_0 = tree.getProof(leaf: leaves[0]);
 
-      expect(tree.verify(proof: proof_0, targetNode: leaves[0], root: root), true);
+      expect(
+          tree.verify(proof: proof_0, targetNode: leaves[0], root: root), true);
     });
 
     test('sha3 - hex strings', () {
-      List<Uint8List> leaves = ['a', 'b', 'c'].map((x) => Uint8List.fromList(x.codeUnits)).map((x) => sha3(x)).toList();
+      List<Uint8List> leaves = ['a', 'b', 'c']
+          .map((x) => Uint8List.fromList(x.codeUnits))
+          .map((x) => sha3(x))
+          .toList();
       var tree = MerkleTree(leaves: leaves, hashAlgo: sha256);
-      var root = '311d2e46f49b15fff8b746b74ad57f2cc9e0d9939fda94387141a2d3fdf187ae';
+      var root =
+          '311d2e46f49b15fff8b746b74ad57f2cc9e0d9939fda94387141a2d3fdf187ae';
       expect(hex.encode(tree.root), root);
     });
 
@@ -235,14 +269,16 @@ void main() {
         values.add("${i}");
       }
 
-      var leaves = values.map((x) => Uint8List.fromList(x.codeUnits)).map((x) => sha256(x)).toList();
+      var leaves = values
+          .map((x) => Uint8List.fromList(x.codeUnits))
+          .map((x) => sha256(x))
+          .toList();
 
       var tree = MerkleTree(leaves: leaves, hashAlgo: sha256);
 
-      var root = '101dd357df60384d254330fe118e3046871767c2748ebd62ce031c117df483da';
+      var root =
+          '101dd357df60384d254330fe118e3046871767c2748ebd62ce031c117df483da';
       expect(hex.encode(tree.root), root);
     }, skip: "for benchmark only");
-
-    
   });
 }
