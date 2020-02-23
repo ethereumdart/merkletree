@@ -14,6 +14,9 @@ void main() {
     return sha3.process(data);
   }
 
-  var leaves = ['a', 'b', 'c'].map((x) => Uint8List.fromList(x.codeUnits)).map((x) => sha3(x)).toList();
+  var leaves = ['a', 'b', 'c']
+      .map((x) => Uint8List.fromList(x.codeUnits))
+      .map((x) => sha3(x))
+      .toList();
   var tree = MerkleTree(leaves: leaves, hashAlgo: sha256);
 }
