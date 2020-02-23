@@ -10,7 +10,7 @@ class MerkleTreeUtils {
   static Uint8List bufferReverse(Uint8List src) {
     var buffer = Uint8List(src.length);
 
-    for (int i = 0, j = src.length - 1; i <= j; ++i, --j) {
+    for (var i = 0, j = src.length - 1; i <= j; ++i, --j) {
       buffer[i] = src[j];
       buffer[j] = src[i];
     }
@@ -25,7 +25,7 @@ class MerkleTreeUtils {
   }
 
   static int bufferCompare(Uint8List a, Uint8List b) {
-    for (int i = 0; i < a.length && i < b.length; i++) {
+    for (var i = 0; i < a.length && i < b.length; i++) {
       if (a[i] < b[i]) return -1;
       if (a[i] > b[i]) return 1;
     }
