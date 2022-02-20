@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:merkletree/src/utils.dart';
 import 'package:meta/meta.dart';
 
-typedef Uint8List HashAlgo(Uint8List input);
+typedef HashAlgo = Uint8List Function(Uint8List input);
 
 /// Class representing a Merkle Tree
 class MerkleTree {
@@ -24,38 +24,38 @@ class MerkleTree {
   /// ```dart
   /// import 'dart:typed_data';
   ///
-  /// import "package:convert/convert.dart";
+  /// import 'package:convert/convert.dart';
   /// import 'package:merkletree/merkletree.dart';
-  /// import "package:pointycastle/pointycastle.dart";
+  /// import 'package:pointycastle/pointycastle.dart';
   ///
   /// Uint8List sha3(Uint8List data) {
-  ///   Digest sha3 = new Digest("SHA-3/256");
+  ///   var sha3 = Digest("SHA-3/256");
   ///   return sha3.process(data);
   /// }
   ///
   /// List<Uint8List> leaves = ['a', 'b', 'c'].map((x) => Uint8List.fromList(x.codeUnits)).map((x) => sha3(x)).toList();
-  /// var tree = new MerkleTree(leaves: leaves, hashAlgo: sha256);
+  /// var tree = MerkleTree(leaves: leaves, hashAlgo: sha256);
   /// ```
   MerkleTree(
       {@required this.leaves,
       @required this.hashAlgo,
       this.isBitcoinTree = false}) {
-    this._layers = [this.leaves];
-    this._createHashes(this.leaves);
+    _layers = [leaves];
+    _createHashes(leaves);
   }
 
-  _createHashes(List<Uint8List> nodes) {
+  void _createHashes(List<Uint8List> nodes) {
     while (nodes.length > 1) {
-      int layerIndex = this._layers.length;
+      var layerIndex = _layers.length;
 
-      this._layers.add([]);
+      _layers.add([]);
 
-      for (int i = 0; i < nodes.length - 1; i += 2) {
-        Uint8List left = nodes[i];
-        Uint8List right = nodes[i + 1];
+      for (var i = 0; i < nodes.length - 1; i += 2) {
+        var left = nodes[i];
+        var right = nodes[i + 1];
         Uint8List data;
 
-        if (this.isBitcoinTree) {
+        if (isBitcoinTree) {
           data = MerkleTreeUtils.bufferConcat([
             MerkleTreeUtils.bufferReverse(left),
             MerkleTreeUtils.bufferReverse(right)
@@ -64,14 +64,14 @@ class MerkleTree {
           data = MerkleTreeUtils.bufferConcat([left, right]);
         }
 
-        var hash = this.hashAlgo(data);
+        var hash = hashAlgo(data);
 
         // double hash if bitcoin tree
-        if (this.isBitcoinTree) {
-          hash = MerkleTreeUtils.bufferReverse(this.hashAlgo(hash));
+        if (isBitcoinTree) {
+          hash = MerkleTreeUtils.bufferReverse(hashAlgo(hash));
         }
 
-        this._layers[layerIndex].add(hash);
+        _layers[layerIndex].add(hash);
       }
 
       // is odd number of nodes
@@ -80,39 +80,39 @@ class MerkleTree {
         var hash = data;
 
         // is bitcoin tree
-        if (this.isBitcoinTree) {
+        if (isBitcoinTree) {
           // Bitcoin method of duplicating the odd ending nodes
           data = MerkleTreeUtils.bufferConcat([
             MerkleTreeUtils.bufferReverse(data),
             MerkleTreeUtils.bufferReverse(data)
           ]);
-          hash = this.hashAlgo(data);
-          hash = MerkleTreeUtils.bufferReverse(this.hashAlgo(hash));
+          hash = hashAlgo(data);
+          hash = MerkleTreeUtils.bufferReverse(hashAlgo(hash));
         }
 
-        this._layers[layerIndex].add(hash);
+        _layers[layerIndex].add(hash);
       }
 
-      nodes = this._layers[layerIndex];
+      nodes = _layers[layerIndex];
     }
   }
 
   /// Returns array of all layers of Merkle Tree, including leaves and root.
   List<List<Uint8List>> get layers {
-    return this._layers;
+    return _layers;
   }
 
   /// Returns the Merkle root hash as a Buffer.
   Uint8List get root {
-    if (this._layers.length == 0) {
+    if (_layers.isEmpty) {
       return Uint8List(0);
     }
 
-    if (this._layers[this._layers.length - 1].length == 0) {
+    if (_layers[_layers.length - 1].isEmpty) {
       return Uint8List(0);
     }
 
-    return this._layers[this._layers.length - 1][0] ?? Uint8List(0);
+    return _layers[_layers.length - 1][0] ?? Uint8List(0);
   }
 
   /// Returns the proof for a target leaf.
@@ -129,11 +129,11 @@ class MerkleTree {
   /// var proof = tree.getProof(leaf: leaves[2], index: 2);
   /// ```
   List<MerkleProof> getProof({@required Uint8List leaf, int index = -1}) {
-    List<MerkleProof> proof = [];
+    var proof = <MerkleProof>[];
 
     if (index == -1) {
-      for (int i = 0; i < this.leaves.length; i++) {
-        if (MerkleTreeUtils.bufferCompare(leaf, this.leaves[i]) == 0) {
+      for (var i = 0; i < leaves.length; i++) {
+        if (MerkleTreeUtils.bufferCompare(leaf, leaves[i]) == 0) {
           index = i;
         }
       }
@@ -143,11 +143,11 @@ class MerkleTree {
       return [];
     }
 
-    if (this.isBitcoinTree && index == (this.leaves.length - 1)) {
+    if (isBitcoinTree && index == (leaves.length - 1)) {
       // Proof Generation for Bitcoin Trees
 
-      for (int i = 0; i < this._layers.length - 1; i++) {
-        var layer = this._layers[i];
+      for (var i = 0; i < _layers.length - 1; i++) {
+        var layer = _layers[i];
         var isRightNode = index % 2 == 1;
         var pairIndex = (isRightNode ? index - 1 : index);
 
@@ -167,8 +167,8 @@ class MerkleTree {
     } else {
       // Proof Generation for Non-Bitcoin Trees
 
-      for (int i = 0; i < this._layers.length; i++) {
-        var layer = this._layers[i];
+      for (var i = 0; i < _layers.length; i++) {
+        var layer = _layers[i];
         var isRightNode = index % 2 == 1;
         var pairIndex = (isRightNode ? index - 1 : index + 1);
 
@@ -204,16 +204,16 @@ class MerkleTree {
       @required Uint8List root}) {
     var hash = targetNode;
 
-    if (proof.length == 0 || targetNode.length == 0 || root.length == 0) {
+    if (proof.isEmpty || targetNode.isEmpty || root.isEmpty) {
       return false;
     }
 
-    for (int i = 0; i < proof.length; i++) {
+    for (var i = 0; i < proof.length; i++) {
       var node = proof[i];
       var isLeftNode = (node.position == MerkleProofPosition.left);
-      List<Uint8List> buffers = [];
+      var buffers = <Uint8List>[];
 
-      if (this.isBitcoinTree) {
+      if (isBitcoinTree) {
         buffers.add(MerkleTreeUtils.bufferReverse(hash));
 
         if (isLeftNode) {
@@ -222,8 +222,8 @@ class MerkleTree {
           buffers.add(MerkleTreeUtils.bufferReverse(node.data));
         }
 
-        hash = this.hashAlgo(MerkleTreeUtils.bufferConcat(buffers));
-        hash = MerkleTreeUtils.bufferReverse(this.hashAlgo(hash));
+        hash = hashAlgo(MerkleTreeUtils.bufferConcat(buffers));
+        hash = MerkleTreeUtils.bufferReverse(hashAlgo(hash));
       } else {
         buffers.add(hash);
 
@@ -233,7 +233,7 @@ class MerkleTree {
           buffers.add(node.data);
         }
 
-        hash = this.hashAlgo(MerkleTreeUtils.bufferConcat(buffers));
+        hash = hashAlgo(MerkleTreeUtils.bufferConcat(buffers));
       }
     }
 

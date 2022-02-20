@@ -1,6 +1,6 @@
-# Merkle Tree Dart
+# Merkle Tree Dart Example
 
-Ported from https://github.com/miguelmota/merkletreejs
+Here is a working Dart example of the Merkle Tree Dart implementation
 
 ## Construct a Merkle Tree.
 All nodes and leaves are stored as *Uint8List*.
